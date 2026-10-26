@@ -1,0 +1,35 @@
+name: Construire HELIOS APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le projet
+        uses: actions/checkout@v4
+
+      - name: Décompresser le projet
+        run: unzip HELIOS_ULTIMATE_ANDROID_SOURCE.zip
+
+      - name: Installer Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Préparer Android
+        uses: android-actions/setup-android@v3
+
+      - name: Construire HELIOS
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: '8.9'
+          arguments: -p HELIOS_ULTIMATE_ANDROID assembleDebug
+
+      - name: Récupérer l'APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: HELIOS-APK
+          path: HELIOS_ULTIMATE_ANDROID/app/build/outputs/apk/debug/app-debug.apk
