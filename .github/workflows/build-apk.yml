@@ -15,7 +15,7 @@ jobs:
         run: unzip HELIOS_ULTIMATE_ANDROID_SOURCE-1.zip
 
       - name: Installer Java
-        uses: actions/setup-java@v4
+        uses: android-actions/setup-android@v4
         with:
           distribution: temurin
           java-version: '17'
