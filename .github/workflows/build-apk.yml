@@ -19,15 +19,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-          
-      - name: Préparer Android
-        uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            platform-tools
-            platforms;android-35
-            build-tools;35.0.0
+        
 
+      - name: Préparer Android
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+        
       - name: Construire HELIOS
         uses: gradle/gradle-build-action@v3
         with:
