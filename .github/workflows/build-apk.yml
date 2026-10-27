@@ -30,7 +30,7 @@ jobs:
         uses: gradle/gradle-build-action@v3
         with:
           gradle-version: '8.9'
-          arguments: -p HELIOS_ULTIMATE_FULL assembleDebug
+          arguments: assembleDebug
 
       - name: Récupérer l'APK
         uses: actions/upload-artifact@v4
