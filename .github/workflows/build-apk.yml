@@ -41,7 +41,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-        
 
       - name: Préparer Android
         uses: android-actions/setup-android@v4
@@ -49,11 +48,20 @@ jobs:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
         
       - name: Construire HELIOS
-        uses: gradle/gradle-build-action@v3
-        with:
-          gradle-version: '8.9'
-          build-root-directory: $ {{ env.PROJECT_DIR }}
-          arguments: assembleDebug
+        shell: bash
+        run: |
+          SETTINGS=$(find extracted -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) -print -quit)
+
+          if [ -z "$SETTINGS" ]; then
+            echo "Projet Gradle introuvable"
+            exit 1
+          fi
+
+          PROJECT_DIR=$(dirname "$SETTINGS")
+          echo "Compilation depuis : $PROJECT_DIR"
+
+          cd "$PROJECT_DIR"
+          gradle assembleDebug
 
       - name: Récupérer l'APK
         uses: actions/upload-artifact@v4
