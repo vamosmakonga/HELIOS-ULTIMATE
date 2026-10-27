@@ -12,8 +12,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Décompresser le projet
-        run: unzip -o HELIOS_ULTIMATE/HELIOS_ULTIMATE_FULL.zip -d extracted
+        shell: bash
+        run: |
+          echo "Recherche du fichier ZIP..."
+          find . -type f -iname "HELIOS_ULTIMATE_FULL.zip"
+          ZIP_FILE=$(find . -type f -iname "HELIOS_ULTIMATE_FULL.zip" -print -quit)
 
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ERREUR : fichier ZIP introuvable"
+            exit 1
+          fi
+
+          echo "Archive trouvée : $ZIP_FILE"
+          mkdir -p extracted
+          unzip -o "$ZIP_FILE" -d extracted
+
+          find extracted -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \)
       - name: Installer Java
         uses: android-actions/setup-android@v4
         with:
