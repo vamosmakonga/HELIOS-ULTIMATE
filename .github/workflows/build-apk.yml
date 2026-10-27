@@ -46,23 +46,21 @@ jobs:
         uses: android-actions/setup-android@v4
         with:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
-        
+
+      - name: Installer Gradle 8.9
+        uses: gradle/actions/setup-gradle@v6
+        with:
+              gradle-version: '8.9'
+              
       - name: Construire HELIOS
         shell: bash
         run: |
           SETTINGS=$(find extracted -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) -print -quit)
-
-          if [ -z "$SETTINGS" ]; then
-            echo "Projet Gradle introuvable"
-            exit 1
-          fi
-
           PROJECT_DIR=$(dirname "$SETTINGS")
-          echo "Compilation depuis : $PROJECT_DIR"
-
           cd "$PROJECT_DIR"
+          gradle --version
           gradle assembleDebug
-
+          
       - name: Récupérer l'APK
         uses: actions/upload-artifact@v4
         with:
