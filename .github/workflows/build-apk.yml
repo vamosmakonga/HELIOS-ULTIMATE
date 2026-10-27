@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Décompresser le projet
-        run: unzip -o HELIOS_ULTIMATE_FULL.zip -d .
+        run: unzip -o HELIOS_ULTIMATE/HELIOS_ULTIMATE_FULL.zip -d extracted
 
       - name: Installer Java
         uses: android-actions/setup-android@v4
