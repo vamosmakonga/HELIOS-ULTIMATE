@@ -1,15 +1,35 @@
+
 name: Construire HELIOS APK
+
 on:
   workflow_dispatch:
   push:
     branches:
       - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Récupérer le projet
         uses: actions/checkout@v4
+
+      - name: Installer Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Installer Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+
+      - name: Installer Gradle 8.13
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '8.13'
 
       - name: Décompresser le projet
         shell: bash
@@ -17,7 +37,7 @@ jobs:
           ZIP_FILE=$(find . -type f -iname "HELIOS_ULTIMATE_FULL.zip" -print -quit)
 
           if [ -z "$ZIP_FILE" ]; then
-            echo "ZIP introuvable"
+            echo "ERREUR : ZIP introuvable"
             exit 1
           fi
 
@@ -27,42 +47,50 @@ jobs:
           SETTINGS=$(find extracted -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) -print -quit)
 
           if [ -z "$SETTINGS" ]; then
-            echo "ERREUR : aucun fichier settings.gradle trouvé"
-            find extracted -maxdepth 4 -type f
+            echo "ERREUR : settings.gradle introuvable"
             exit 1
           fi
 
           PROJECT_DIR=$(dirname "$SETTINGS")
-          echo "Projet Android trouvé dans : $PROJECT_DIR"
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-          
-      - name: Installer Java
-        uses: android-actions/setup-android@v4
-        with:
-          distribution: temurin
-          java-version: '17'
 
-      - name: Préparer Android
-        uses: android-actions/setup-android@v4
-        with:
-          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+          echo "Projet trouvé : $PROJECT_DIR"
 
-      - name: Installer Gradle 8.13
-        uses: gradle/actions/setup-gradle@v6
-        with:
-              gradle-version: '8.13'
-              
+      - name: Corriger automatiquement le code HELIOS
+        shell: bash
+        run: |
+          FILE=$(find "$PROJECT_DIR" -name "MainActivity.java" -print -quit)
+
+          if [ -z "$FILE" ]; then
+            echo "ERREUR : MainActivity.java introuvable"
+            exit 1
+          fi
+
+          sed -i 's/setTextAllCaps(/setAllCaps(/g' "$FILE"
+
+          echo "Correction effectuée."
+          grep -n "setAllCaps" "$FILE" || true
+
       - name: Construire HELIOS
         shell: bash
         run: |
-          SETTINGS=$(find extracted -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) -print -quit)
-          PROJECT_DIR=$(dirname "$SETTINGS")
           cd "$PROJECT_DIR"
           gradle --version
           gradle assembleDebug
-          
+
+          APK=$(find app/build/outputs/apk/debug -name "*.apk" -print -quit)
+
+          if [ -z "$APK" ]; then
+            echo "ERREUR : APK introuvable"
+            exit 1
+          fi
+
+          echo "APK_PATH=$PROJECT_DIR/$APK" >> "$GITHUB_ENV"
+
       - name: Récupérer l'APK
         uses: actions/upload-artifact@v4
         with:
-          name: HELIOS-APK
-          path: HELIOS_ULTIMATE_FULL/app/build/outputs/apk/debug/app-debug.apk
+          name: HELIOS-ULTIMATE-APK
+          path: $ {{ env.APK_PATH }}
+          if-no-files-found: error
+          
