@@ -1,4 +1,3 @@
-
 name: Construire HELIOS APK
 
 on:
@@ -91,6 +90,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: HELIOS-ULTIMATE-APK
-          path: $ {{ env.APK_PATH }}
+          path: extracted/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
-          
