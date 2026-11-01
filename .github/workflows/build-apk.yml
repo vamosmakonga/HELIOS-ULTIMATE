@@ -55,27 +55,12 @@ jobs:
 
           echo "Projet trouvé : $PROJECT_DIR"
 
-      - name: Corriger automatiquement le code HELIOS
-        shell: bash
-        run: |
-          FILE=$(find "$PROJECT_DIR" -name "MainActivity.java" -print -quit)
-
-          if [ -z "$FILE" ]; then
-            echo "ERREUR : MainActivity.java introuvable"
-            exit 1
-          fi
-
-          sed -i 's/setTextAllCaps(/setAllCaps(/g' "$FILE"
-
-          echo "Correction effectuée."
-          grep -n "setAllCaps" "$FILE" || true
-
       - name: Construire HELIOS
         shell: bash
         run: |
           cd "$PROJECT_DIR"
           gradle --version
-          gradle assembleDebug
+          gradle assembleDebug --stacktrace
 
           APK=$(find app/build/outputs/apk/debug -name "*.apk" -print -quit)
 
@@ -86,9 +71,19 @@ jobs:
 
           echo "APK_PATH=$PROJECT_DIR/$APK" >> "$GITHUB_ENV"
 
+      - name: Vérifier l'APK (signature, identifiant, taille)
+        shell: bash
+        run: |
+          APK_FILE=$(find "$PROJECT_DIR/app/build/outputs/apk/debug" -name "*.apk" -print -quit)
+          ls -la "$APK_FILE"
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
+          "$BT/apksigner" verify --verbose --print-certs "$APK_FILE" || true
+          "$BT/aapt" dump badging "$APK_FILE" | grep -E "^package:|sdkVersion|targetSdkVersion" || true
+
       - name: Récupérer l'APK
         uses: actions/upload-artifact@v4
         with:
           name: HELIOS-ULTIMATE-APK
           path: extracted/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+          
