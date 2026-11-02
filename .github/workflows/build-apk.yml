@@ -31,7 +31,8 @@ jobs:
           echo "sdkmanager : $SM"
           yes | "$SM" --sdk_root="$ANDROID_HOME" --licenses > /dev/null || true
           "$SM" --sdk_root="$ANDROID_HOME" "platforms;android-34" "build-tools;34.0.0" || true
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
 
       - name: Installer Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
@@ -77,7 +78,14 @@ jobs:
           ls -la "$out"
 
       - name: Compiler l'APK
-        run: gradle :app:assembleDebug --no-daemon --stacktrace
+        run: |
+          gradle :app:assembleDebug --no-daemon --console=plain > build.log 2>&1 || {
+            echo "=============== RÉSUMÉ DE L'ERREUR (photographiez cette partie) ==============="
+            grep -n -B2 -A14 -E "What went wrong|error:|^e: " build.log | head -70
+            echo "=============== FIN DU RÉSUMÉ ==============="
+            exit 1
+          }
+          tail -5 build.log
 
       - name: Publier l'APK
         uses: actions/upload-artifact@v4
