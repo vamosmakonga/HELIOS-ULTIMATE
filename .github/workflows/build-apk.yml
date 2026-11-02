@@ -22,8 +22,16 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Installer le SDK Android
-        uses: android-actions/setup-android@v3
+      - name: Préparer le SDK Android (déjà présent sur la machine GitHub)
+        run: |
+          set -e
+          export ANDROID_HOME="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          echo "SDK : $ANDROID_HOME"
+          SM=$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)
+          echo "sdkmanager : $SM"
+          yes | "$SM" --sdk_root="$ANDROID_HOME" --licenses > /dev/null || true
+          "$SM" --sdk_root="$ANDROID_HOME" "platforms;android-34" "build-tools;34.0.0" || true
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
 
       - name: Installer Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
