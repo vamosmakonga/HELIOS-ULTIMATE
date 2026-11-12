@@ -16,6 +16,27 @@ jobs:
       - name: Récupérer le code
         uses: actions/checkout@v4
 
+      - name: Placer le projet à la racine (si le ZIP a été envoyé dans un sous-dossier)
+        run: |
+          if [ ! -f settings.gradle.kts ]; then
+            for z in $(find . -maxdepth 2 -iname '*.zip' -not -path './.git/*'); do
+              echo "ZIP trouvé : $z -> extraction"; unzip -oq "$z" -d _zip_extrait || true
+            done
+          fi
+          if [ ! -f settings.gradle.kts ]; then
+            f=$(find . -maxdepth 4 -not -path './.git/*' -name settings.gradle.kts | head -1)
+            [ -n "$f" ] || { echo "ERREUR : settings.gradle.kts introuvable"; exit 1; }
+            d=$(dirname "$f"); echo "Projet trouvé dans : $d"
+            cp -a "$d"/. .
+          fi
+          if false; then
+            f=$(find . -maxdepth 3 -name settings.gradle.kts -not -path './.git/*' | head -1)
+            [ -n "$f" ] || { echo "ERREUR : settings.gradle.kts introuvable dans le dépôt"; exit 1; }
+            d=$(dirname "$f"); echo "Projet trouvé dans : $d"
+            cp -a "$d"/. .
+          fi
+          ls -la
+
       - name: Installer Java 17
         uses: actions/setup-java@v4
         with:
